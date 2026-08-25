@@ -1,0 +1,14 @@
+{
+  "title": "Spider-Man // Suit Archive",
+  "description": "Explore an immersive 3D scroll-driven cinematic experience showcasing Spider-Man's suit with interactive scenes, detailed tech analysis, and smooth animations.",
+  "robots": {
+    "index": true
+  },
+  "icons": {
+    "icon": "/favicon.svg"
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}

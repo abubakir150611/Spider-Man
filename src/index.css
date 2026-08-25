@@ -1,0 +1,102 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,300;0,400;0,600;0,700;0,900;1,700&family=Barlow:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap');
+@import 'tailwindcss';
+
+@theme {
+  --font-display: 'Barlow Condensed', sans-serif;
+  --font-body: 'Barlow', sans-serif;
+  --font-mono: 'Space Mono', monospace;
+  --color-spider-red: #c41230;
+  --color-spider-blue: #1a3a7a;
+  --color-spider-dark: #050505;
+  --color-hud-cyan: #00d4ff;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+* {
+  cursor: none !important;
+}
+
+html {
+  scroll-behavior: auto;
+}
+
+body {
+  background: #050505;
+  color: #fff;
+  font-family: 'Barlow', sans-serif;
+  overflow-x: hidden;
+}
+
+::-webkit-scrollbar {
+  display: none;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scanLine {
+  0% { transform: translateY(-100%); opacity: 0; }
+  10% { opacity: 0.6; }
+  90% { opacity: 0.6; }
+  100% { transform: translateY(100vh); opacity: 0; }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+@keyframes glitch {
+  0%, 100% { clip-path: inset(0 0 100% 0); }
+  5% { clip-path: inset(20% 0 50% 0); transform: translateX(-4px); }
+  10% { clip-path: inset(60% 0 20% 0); transform: translateX(4px); }
+  15% { clip-path: inset(0 0 100% 0); }
+}
+
+@keyframes hudScan {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+@keyframes ripple {
+  0% { transform: translate(-50%, -50%) scale(0); opacity: 0.8; }
+  100% { transform: translate(-50%, -50%) scale(3); opacity: 0; }
+}
+
+@keyframes spinSlow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes loadProgress {
+  0% { width: 0%; }
+  100% { width: 100%; }
+}
+
+@keyframes spiderPulse {
+  0%, 100% { filter: drop-shadow(0 0 8px rgba(196,18,48,0.6)); }
+  50% { filter: drop-shadow(0 0 20px rgba(196,18,48,1)); }
+}
+
+@keyframes dataStream {
+  0% { opacity: 0; transform: translateY(0); }
+  50% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-20px); }
+}
+
+@keyframes targetLock {
+  0% { transform: translate(-50%,-50%) scale(1.5); opacity: 0; }
+  100% { transform: translate(-50%,-50%) scale(1); opacity: 1; }
+}
+
+@keyframes cornerExpand {
+  0% { width: 6px; height: 6px; }
+  100% { width: 14px; height: 14px; }
+}
