@@ -72,21 +72,73 @@ function buildEyeShape(): THREE.Shape {
   return s;
 }
 
+/** Diamond spider-web grid painted onto a canvas, used as a diffuse+bump map on suit fabric. */
+function buildWebPatternTexture(cells = 7, size = 512): THREE.CanvasTexture {
+  const canvas = document.createElement("canvas");
+  canvas.width = size; canvas.height = size;
+  const ctx = canvas.getContext("2d")!;
+  ctx.fillStyle = "#e2e2e2";
+  ctx.fillRect(0, 0, size, size);
+  const step = size / cells;
+  ctx.strokeStyle = "rgba(5,5,5,0.8)";
+  ctx.lineWidth = Math.max(2, size / 170);
+  ctx.beginPath();
+  for (let i = -cells; i <= cells * 2; i++) {
+    ctx.moveTo(i * step, 0);
+    ctx.lineTo(i * step - size, size);
+    ctx.moveTo(i * step, 0);
+    ctx.lineTo(i * step + size, size);
+  }
+  ctx.stroke();
+  // Fine fabric grain
+  ctx.globalAlpha = 0.06;
+  for (let i = 0; i < 900; i++) {
+    ctx.fillStyle = Math.random() > 0.5 ? "#000" : "#fff";
+    ctx.fillRect(Math.random() * size, Math.random() * size, 1.5, 1.5);
+  }
+  ctx.globalAlpha = 1;
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.anisotropy = 4;
+  return tex;
+}
+
+/** Tapers the bottom rows of a unit sphere inward to form a jaw/chin point. */
+function taperJaw(geo: THREE.SphereGeometry, startY = -0.1, minTaper = 0.32): void {
+  const pos = geo.attributes.position as THREE.BufferAttribute;
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
+    if (y < startY) {
+      const t = clamp((startY - y) / (startY + 1), 0, 1);
+      const taper = lerp(1, minTaper, easeIO(t));
+      pos.setX(i, x * taper);
+      pos.setZ(i, z * taper);
+    }
+  }
+  pos.needsUpdate = true;
+  geo.computeVertexNormals();
+}
+
 function buildMask(): { group: THREE.Group; eyeL: THREE.Mesh; eyeR: THREE.Mesh } {
   const group = new THREE.Group();
 
-  const headGeo = new THREE.SphereGeometry(1, 96, 72);
+  const webTex = buildWebPatternTexture(7, 512);
+  webTex.repeat.set(9, 6);
+
+  const headGeo = new THREE.SphereGeometry(1, 128, 96);
+  taperJaw(headGeo);
   const headMat = new THREE.MeshPhysicalMaterial({
-    color: 0x7a0012, roughness: 0.18, metalness: 0.82,
-    clearcoat: 1.0, clearcoatRoughness: 0.08,
+    color: 0x9a0018, roughness: 0.34, metalness: 0.55,
+    clearcoat: 0.5, clearcoatRoughness: 0.28,
+    map: webTex, bumpMap: webTex, bumpScale: 0.022,
   });
   const head = new THREE.Mesh(headGeo, headMat);
   head.scale.set(1.0, 1.22, 0.90);
   group.add(head);
 
-  // Web lines on the sphere surface
+  // Fine embossed web lines tracing the same diamond grid, for a crisper silhouette highlight
   const buf: number[] = [];
-  const R = 16, C = 10, S = 40;
+  const R = 20, C = 12, S = 48;
   for (let r = 0; r < R; r++) {
     const phi = (r / R) * Math.PI * 2;
     for (let s = 0; s < S; s++) {
@@ -109,24 +161,37 @@ function buildMask(): { group: THREE.Group; eyeL: THREE.Mesh; eyeR: THREE.Mesh }
   }
   const webGeo = new THREE.BufferGeometry();
   webGeo.setAttribute("position", new THREE.Float32BufferAttribute(buf, 3));
-  group.add(new THREE.LineSegments(webGeo, new THREE.LineBasicMaterial({ color: 0x1e0000, transparent: true, opacity: 0.5 })));
+  group.add(new THREE.LineSegments(webGeo, new THREE.LineBasicMaterial({ color: 0x1e0000, transparent: true, opacity: 0.35 })));
 
+  const eyeOutlineGeo = new THREE.ShapeGeometry(buildEyeShape(), 48);
+  const eyeOutlineMat = new THREE.MeshBasicMaterial({ color: 0x050505 });
   const eyeGeo = new THREE.ShapeGeometry(buildEyeShape(), 48);
   const eyeMat = new THREE.MeshPhysicalMaterial({
     color: 0xffffff, roughness: 0.02, metalness: 0.95, clearcoat: 1.0,
     emissive: 0xffffff, emissiveIntensity: 0.8,
   });
+
   const eyeL = new THREE.Mesh(eyeGeo, eyeMat);
   eyeL.scale.setScalar(0.54);
-  eyeL.position.set(0.37, 0.28 * 1.22, 0.85 * 0.90 + 0.01);
+  eyeL.position.set(0.37, 0.28 * 1.22, 0.85 * 0.90 + 0.012);
   eyeL.rotation.set(0.08, -0.25, -0.16);
   group.add(eyeL);
+  const eyeOutlineL = new THREE.Mesh(eyeOutlineGeo, eyeOutlineMat);
+  eyeOutlineL.scale.setScalar(0.54 * 1.16);
+  eyeOutlineL.position.set(0.37, 0.28 * 1.22, 0.85 * 0.90 + 0.004);
+  eyeOutlineL.rotation.copy(eyeL.rotation);
+  group.add(eyeOutlineL);
 
   const eyeR = new THREE.Mesh(eyeGeo, eyeMat.clone());
   eyeR.scale.set(-0.54, 0.54, 0.54);
-  eyeR.position.set(-0.37, 0.28 * 1.22, 0.85 * 0.90 + 0.01);
+  eyeR.position.set(-0.37, 0.28 * 1.22, 0.85 * 0.90 + 0.012);
   eyeR.rotation.set(0.08, 0.25, 0.16);
   group.add(eyeR);
+  const eyeOutlineR = new THREE.Mesh(eyeOutlineGeo, eyeOutlineMat);
+  eyeOutlineR.scale.set(-0.54 * 1.16, 0.54 * 1.16, 0.54 * 1.16);
+  eyeOutlineR.position.set(-0.37, 0.28 * 1.22, 0.85 * 0.90 + 0.004);
+  eyeOutlineR.rotation.copy(eyeR.rotation);
+  group.add(eyeOutlineR);
 
   return { group, eyeL, eyeR };
 }
@@ -415,40 +480,84 @@ function buildMorphParticles(count: number): THREE.Points {
 
 function buildSuit(colorHex: number, accent: number, goldAccent?: boolean): THREE.Group {
   const g = new THREE.Group();
+  const webTex = buildWebPatternTexture(6, 384);
+  webTex.repeat.set(4, 4);
   const mk = (c: number, em?: number) => new THREE.MeshStandardMaterial({
-    color: c, roughness: goldAccent ? 0.12 : 0.28, metalness: goldAccent ? 0.95 : 0.70,
+    color: c, roughness: goldAccent ? 0.16 : 0.42, metalness: goldAccent ? 0.92 : 0.5,
     emissive: em ?? 0, emissiveIntensity: em ? 0.25 : 0,
+    map: webTex, bumpMap: webTex, bumpScale: 0.018,
   });
   const accentMat = mk(accent);
   const bodyMat = mk(colorHex);
+  const jointMat = mk(accent);
 
-  const parts: [THREE.BufferGeometry, THREE.Material, number, number, number][] = [
-    [new THREE.SphereGeometry(0.23, 28, 24), bodyMat, 0, 2.0, 0],
-    [new THREE.CylinderGeometry(0.36, 0.30, 1.05, 28), bodyMat, 0, 1.12, 0],
-    [new THREE.CylinderGeometry(0.31, 0.26, 0.38, 24), accentMat, 0, 0.57, 0],
-  ];
-  parts.forEach(([geo, mat, x, y, z]) => {
-    const m = new THREE.Mesh(geo, mat);
-    if (geo instanceof THREE.SphereGeometry) m.scale.set(1, 1.18, 0.9);
-    m.position.set(x, y, z);
-    g.add(m);
-  });
+  // Head
+  const headGeo = new THREE.SphereGeometry(0.23, 32, 28);
+  taperJaw(headGeo, -0.05, 0.4);
+  const head = new THREE.Mesh(headGeo, bodyMat);
+  head.scale.set(1, 1.18, 0.9);
+  head.position.set(0, 2.0, 0);
+  g.add(head);
+  const neck = new THREE.Mesh(new THREE.CapsuleGeometry(0.1, 0.1, 4, 12), bodyMat);
+  neck.position.set(0, 1.78, 0);
+  g.add(neck);
+
+  // Torso: lathe-turned profile for a chest-to-waist taper instead of a plain cylinder
+  const chestPts = [
+    [0.30, 0.72], [0.36, 0.90], [0.405, 1.10], [0.40, 1.32], [0.33, 1.52], [0.21, 1.68],
+  ].map(([x, y]) => new THREE.Vector2(x, y));
+  const chest = new THREE.Mesh(new THREE.LatheGeometry(chestPts, 32), bodyMat);
+  g.add(chest);
+
+  const hipPts = [
+    [0.24, 0.36], [0.30, 0.48], [0.335, 0.60], [0.31, 0.74],
+  ].map(([x, y]) => new THREE.Vector2(x, y));
+  const hips = new THREE.Mesh(new THREE.LatheGeometry(hipPts, 32), accentMat);
+  g.add(hips);
 
   [-1, 1].forEach((side) => {
-    const uArm = new THREE.Mesh(new THREE.CylinderGeometry(0.105, 0.095, 0.58, 14), accentMat);
-    uArm.position.set(side * 0.51, 1.28, 0); uArm.rotation.z = side * 0.2;
+    // Shoulder joint
+    const shoulder = new THREE.Mesh(new THREE.SphereGeometry(0.135, 16, 14), jointMat);
+    shoulder.position.set(side * 0.44, 1.50, 0);
+    g.add(shoulder);
+
+    const uArm = new THREE.Mesh(new THREE.CapsuleGeometry(0.1, 0.36, 4, 12), accentMat);
+    uArm.position.set(side * 0.55, 1.22, 0.03);
+    uArm.rotation.z = side * 0.22;
+    uArm.rotation.x = 0.10;
     g.add(uArm);
-    const lArm = new THREE.Mesh(new THREE.CylinderGeometry(0.092, 0.075, 0.52, 14), bodyMat);
-    lArm.position.set(side * 0.64, 0.88, 0); lArm.rotation.z = side * 0.38;
+
+    const elbow = new THREE.Mesh(new THREE.SphereGeometry(0.088, 14, 12), bodyMat);
+    elbow.position.set(side * 0.63, 0.90, 0.10);
+    g.add(elbow);
+
+    const lArm = new THREE.Mesh(new THREE.CapsuleGeometry(0.082, 0.36, 4, 12), bodyMat);
+    lArm.position.set(side * 0.68, 0.62, 0.20);
+    lArm.rotation.z = side * 0.30;
+    lArm.rotation.x = -0.55;
     g.add(lArm);
-    const uLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.135, 0.115, 0.70, 16), accentMat);
-    uLeg.position.set(side * 0.17, 0.13, 0);
+
+    // Hip joint
+    const hip = new THREE.Mesh(new THREE.SphereGeometry(0.14, 16, 14), accentMat);
+    hip.position.set(side * 0.19, 0.42, 0);
+    g.add(hip);
+
+    const uLeg = new THREE.Mesh(new THREE.CapsuleGeometry(0.135, 0.52, 4, 14), accentMat);
+    uLeg.position.set(side * 0.20, 0.06, 0);
+    uLeg.rotation.x = 0.05;
     g.add(uLeg);
-    const lLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.115, 0.095, 0.70, 16), bodyMat);
-    lLeg.position.set(side * 0.17, -0.60, 0);
+
+    const knee = new THREE.Mesh(new THREE.SphereGeometry(0.118, 14, 12), bodyMat);
+    knee.position.set(side * 0.21, -0.42, 0.01);
+    g.add(knee);
+
+    const lLeg = new THREE.Mesh(new THREE.CapsuleGeometry(0.105, 0.50, 4, 14), bodyMat);
+    lLeg.position.set(side * 0.21, -0.78, 0.03);
+    lLeg.rotation.x = -0.06;
     g.add(lLeg);
-    const foot = new THREE.Mesh(new THREE.BoxGeometry(0.17, 0.1, 0.30), bodyMat);
-    foot.position.set(side * 0.18, -1.02, 0.07);
+
+    const foot = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.09, 0.32), bodyMat);
+    foot.position.set(side * 0.21, -1.06, 0.09);
     g.add(foot);
   });
 
