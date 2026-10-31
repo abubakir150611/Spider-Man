@@ -139,6 +139,9 @@ export const ItemScene: React.FC<{ scene: TimelineScene; p: Palette }> = ({ scen
   }
   return (
     <AbsoluteFill>
+      {!hasMedia && (
+        <div style={{ position: 'absolute', right: box.left, top: box.top + box.height * 0.5, transform: `translateY(-50%) translateX(${(1 - indexPop) * 60 * s}px)`, fontFamily: FONTS.display, fontWeight: 900, fontSize: 640 * s, lineHeight: 0.8, color: 'transparent', WebkitTextStroke: `${2.5 * s}px ${p.accent}`, opacity: 0.16 * indexPop }}>{idx}</div>
+      )}
       <div style={{ position: 'absolute', left: box.left, top: box.top, width: box.width, height: box.height, display: 'flex', alignItems: 'center', gap: box.width * 0.06 }}>
         <div style={{ width: textWidth, display: 'flex', flexDirection: 'column', gap: 30 * s }}>
           {header}

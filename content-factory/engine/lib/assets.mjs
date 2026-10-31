@@ -24,7 +24,7 @@ async function captureSite(browser, url, outFile, { vertical, logger }) {
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.waitForTimeout(600);
     const height = await page.evaluate(() => Math.min(document.documentElement.scrollHeight, 2600));
-    await page.screenshot({ path: outFile, type: 'jpeg', quality: 86, clip: { x: 0, y: 0, width: page.viewportSize().width, height: Math.max(900, height) } });
+    await page.screenshot({ path: outFile, type: 'jpeg', quality: 86, fullPage: true, clip: { x: 0, y: 0, width: page.viewportSize().width, height: Math.max(900, height) } });
     logger?.info(`Скриншот: ${url}`);
   } finally {
     await page.close();
