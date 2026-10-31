@@ -39,3 +39,7 @@ This project uses **Tailwind CSS v4** through the `@tailwindcss/vite` plugin con
 - Use double quotes for strings containing apostrophes (`"We're here to help"`), or escape them in single-quoted strings. An unescaped apostrophe in a single-quoted string breaks the build.
 - Ensure JSX tags are closed and braces are balanced.
 - Export components as default exports.
+
+## AI Content Factory
+
+`content-factory/` is a separate Node package (its own `package.json`, not part of the Vite app) that produces videos. Entry point: the `/create-video` command (`.claude/commands/create-video.md`), CLI `node content-factory/engine/bin/cf.mjs`. See `content-factory/README.md`. Secrets live only in `content-factory/.env`.

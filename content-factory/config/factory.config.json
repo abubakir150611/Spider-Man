@@ -1,0 +1,47 @@
+{
+  "defaults": {
+    "platform": "shorts",
+    "language": "ru",
+    "shortDurationSec": 45,
+    "longDurationSec": 480,
+    "theme": "graphite-lime"
+  },
+  "platforms": {
+    "shorts": { "label": "YouTube Shorts", "kind": "short", "width": 1080, "height": 1920, "aspect": "9:16" },
+    "reels": { "label": "Instagram Reels", "kind": "short", "width": 1080, "height": 1920, "aspect": "9:16" },
+    "tiktok": { "label": "TikTok", "kind": "short", "width": 1080, "height": 1920, "aspect": "9:16" },
+    "youtube": { "label": "YouTube", "kind": "long", "width": 1920, "height": 1080, "aspect": "16:9" }
+  },
+  "video": {
+    "fps": 30,
+    "crf": 18,
+    "audioBitrate": "192k",
+    "audioSampleRate": 48000,
+    "loudnessLUFS": -14,
+    "truePeak": -1.5
+  },
+  "audio": {
+    "musicGainDb": -17,
+    "sfxGainDb": -9,
+    "duckThreshold": 0.025,
+    "duckRatio": 9
+  },
+  "tts": {
+    "chains": {
+      "ru": ["edge", "piper", "espeak"],
+      "en": ["edge", "piper", "espeak"],
+      "ky": ["mms", "espeak"]
+    },
+    "voices": {
+      "ru": { "edge": "ru-RU-DmitryNeural", "edgeAlt": "ru-RU-SvetlanaNeural", "piper": "ru_RU-dmitri-medium", "mms": "facebook/mms-tts-rus", "espeak": "ru" },
+      "en": { "edge": "en-US-AndrewNeural", "edgeAlt": "en-US-AvaNeural", "piper": "en_US-ryan-high", "mms": "facebook/mms-tts-eng", "espeak": "en-us" },
+      "ky": { "mms": "facebook/mms-tts-kir", "espeak": "ky" }
+    },
+    "wordsPerSecond": { "ru": 2.4, "en": 2.7, "ky": 2.2 }
+  },
+  "telegram": {
+    "maxUploadMB": 49,
+    "captionLimit": 1024,
+    "messageLimit": 4096
+  }
+}

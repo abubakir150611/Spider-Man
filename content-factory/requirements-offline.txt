@@ -1,0 +1,2 @@
+# Офлайн-озвучка RU/EN (голоса скачиваются один раз в content-factory/.models)
+piper-tts>=1.3

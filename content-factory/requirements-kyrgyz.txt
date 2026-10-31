@@ -1,0 +1,5 @@
+# Кыргызская озвучка: Meta MMS-TTS (facebook/mms-tts-kir), локально, бесплатно (CC-BY-NC 4.0 — для некоммерческого использования)
+transformers>=4.40
+torch
+numpy
+uroman

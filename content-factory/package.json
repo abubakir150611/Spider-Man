@@ -1,0 +1,37 @@
+{
+  "name": "ai-content-factory",
+  "private": true,
+  "version": "1.0.0",
+  "description": "AI Content Factory: research -> script -> voiceover -> motion design -> render -> publish",
+  "type": "module",
+  "bin": {
+    "cf": "engine/bin/cf.mjs"
+  },
+  "scripts": {
+    "cf": "node engine/bin/cf.mjs",
+    "doctor": "node engine/bin/cf.mjs doctor",
+    "studio": "remotion studio engine/remotion/index.ts",
+    "test": "node --test --experimental-test-coverage --test-coverage-include='engine/lib/**' 'engine/test/*.test.mjs'",
+    "typecheck": "tsc -p engine/remotion/tsconfig.json"
+  },
+  "engines": {
+    "node": ">=20.12"
+  },
+  "dependencies": {
+    "@fontsource/inter": "^5.3.0",
+    "@fontsource/jetbrains-mono": "^5.3.0",
+    "@remotion/bundler": "4.0.539",
+    "@remotion/cli": "4.0.539",
+    "@remotion/renderer": "4.0.539",
+    "playwright-core": "^1.64.1",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "remotion": "4.0.539",
+    "zod": "^4.5.4"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "@types/react": "^19.3.0",
+    "typescript": "~5.7.3"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "title": "Название публикации",
+  "shortDescription": "1–2 предложения",
+  "longDescription": "Подробное описание для YouTube (абзац)",
+  "keyPoints": ["Основной тезис 1", "Основной тезис 2"],
+  "hashtags": ["#тег1", "#тег2"],
+  "keywords": ["ключевое слово"],
+  "cta": "Призыв подписаться",
+  "links": [
+    { "name": "Инструмент", "description": "кратко", "website": "https://…", "github": "https://github.com/…", "docs": "https://…", "install": ["npm install …"] }
+  ],
+  "sources": [{ "title": "Источник", "url": "https://…" }]
+}

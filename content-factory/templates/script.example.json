@@ -1,0 +1,19 @@
+{
+  "title": "Заголовок видео",
+  "language": "ru",
+  "platform": "shorts",
+  "targetDurationSec": 45,
+  "theme": "graphite-lime",
+  "voice": { "provider": "auto", "rate": "+8%" },
+  "music": { "mood": "upbeat" },
+  "scenes": [
+    { "type": "hook", "narration": "Короткая цепляющая фраза.", "visual": { "headline": "Текст с *акцентом*", "kicker": "// метка" } },
+    { "type": "title", "narration": "Постановка темы.", "visual": { "label": "Обзор", "title": "Заголовок с *акцентом*", "subtitle": "Подзаголовок" } },
+    { "type": "item", "chapter": "Глава (для YouTube)", "narration": "Рассказ об инструменте.", "visual": { "index": 1, "total": 5, "name": "Name", "tagline": "Одна фраза", "bullets": ["до 4 пунктов"], "website": "https://…", "github": "https://github.com/…", "command": "npm install …", "badge": "MIT" } },
+    { "type": "code", "narration": "Комментарий к команде.", "visual": { "title": "Установка", "language": "bash", "lines": ["npm install …"], "output": ["✓ готово"] } },
+    { "type": "stat", "narration": "Цифра и контекст.", "visual": { "value": "130 000+", "label": "подпись", "source": "источник" } },
+    { "type": "bullets", "narration": "Перечисление.", "visual": { "title": "Заголовок", "items": ["пункт 1", "пункт 2"] } },
+    { "type": "fact", "narration": "Неожиданный факт.", "visual": { "text": "Факт с *акцентом*", "source": "источник", "label": "Факт" } },
+    { "type": "outro", "narration": "Призыв подписаться.", "visual": { "headline": "Сохрани, чтобы *не потерять*", "cta": "Подписаться", "handle": "@channel" } }
+  ]
+}

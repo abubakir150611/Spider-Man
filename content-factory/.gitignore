@@ -1,0 +1,9 @@
+# Секреты и локальное состояние
+.env
+config/telegram-state.json
+config/local.config.json
+.models/
+
+# Проекты видео — локальное хранилище (не удаляются, но и не попадают в git)
+projects/*
+!projects/.gitkeep

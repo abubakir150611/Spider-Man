@@ -1,0 +1,23 @@
+{
+  "topic": "Тема видео",
+  "researchedAt": "2026-10-31",
+  "summary": "Короткий вывод исследования",
+  "items": [
+    {
+      "name": "Название инструмента",
+      "purpose": "Для чего предназначен (одной фразой)",
+      "features": ["Возможность 1", "Возможность 2"],
+      "advantages": ["Преимущество 1"],
+      "website": "https://официальный-сайт",
+      "github": "https://github.com/owner/repo",
+      "docs": "https://документация",
+      "install": [{ "cmd": "npm install package", "note": "что делает", "source": "https://страница-где-найдена-команда" }],
+      "example": "Практический пример использования",
+      "license": "MIT",
+      "pricing": "Бесплатно / freemium / платно",
+      "sources": ["https://источник"]
+    }
+  ],
+  "facts": [{ "text": "Проверяемый факт с цифрой", "source": "https://источник" }],
+  "sources": [{ "title": "Название источника", "url": "https://источник" }]
+}
