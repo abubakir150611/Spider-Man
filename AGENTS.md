@@ -42,4 +42,4 @@ This project uses **Tailwind CSS v4** through the `@tailwindcss/vite` plugin con
 
 ## AI Content Factory
 
-`content-factory/` is a separate Node package (its own `package.json`, not part of the Vite app) that produces videos. Entry point: the `/create-video` command (`.claude/commands/create-video.md`), CLI `node content-factory/engine/bin/cf.mjs`. See `content-factory/README.md`. Secrets live only in `content-factory/.env`.
+`content-factory/` is a separate Node package (its own `package.json`, not part of the Vite app) that produces videos. Entry point: the `/create-video` skill (`.claude/skills/create-video/SKILL.md`, generated from `content-factory/skill/SKILL.md` via `pnpm sync-skill`), CLI `node content-factory/engine/bin/cf.mjs`. `node content-factory/install.mjs` installs it globally (`~/.ai-content-factory` + `~/.claude/skills/create-video`) so it works in every project. See `content-factory/README.md`. Secrets live only in `.env` / environment variables.

@@ -51,15 +51,42 @@
 - **FFmpeg** (с ffprobe): `brew install ffmpeg` / `sudo apt install ffmpeg` / https://ffmpeg.org/download.html
 - **Python 3.9+**
 
-### 2. Установка
+### 2. Установка — один раз, работает во всех проектах и сессиях
 ```bash
-cd content-factory
-pnpm install
-pip install -r requirements.txt          # edge-tts: естественная озвучка RU/EN
-cp .env.example .env                      # заполните позже, для Telegram
-node engine/bin/cf.mjs doctor             # проверка окружения
+git clone https://github.com/abubakir150611/Spider-Man.git
+node Spider-Man/content-factory/install.mjs
 ```
+Установщик:
+- копирует фабрику в `~/.ai-content-factory` (другое место задаётся через `CF_HOME`);
+- ставит npm-зависимости и `edge-tts`;
+- создаёт команду `cf` в `~/.local/bin`;
+- регистрирует **глобальную** команду Claude Code `/create-video` в `~/.claude/skills/create-video/`.
+
+После перезапуска Claude Code команда доступна в любой папке и любом репозитории. Работает на macOS, Linux и Windows.
+
+**Обновление** — тот же запуск: `git pull && node content-factory/install.mjs`. Код заменится, а `.env`, проекты, разрешение Telegram, скачанные голоса и ваша музыка останутся.
+
+Секреты кладите в `~/.ai-content-factory/.env` (файл создаётся из `.env.example`). Подойдут и обычные переменные окружения: они имеют приоритет над `.env`.
+
+Внутри этого репозитория команда работает и без глобальной установки (`.claude/skills/create-video`). Нужно только выполнить `pnpm install` в `content-factory/`.
+
 При первом рендере Remotion сам скачает Chrome Headless Shell. Если Chrome уже установлен, укажите путь в `CF_BROWSER`.
+
+### Облачные сессии Claude Code (claude.ai/code)
+Облачный контейнер создаётся заново для каждой сессии, поэтому фабрику ставит setup-скрипт окружения.
+1. Откройте меню окружения в заголовке сессии → **Edit**.
+2. В **Setup script** добавьте:
+   ```bash
+   git clone --depth 1 https://github.com/abubakir150611/Spider-Man.git /tmp/acf && node /tmp/acf/content-factory/install.mjs
+   apt-get install -y espeak-ng >/dev/null 2>&1 || true   # необязательно: резервный голос
+   ```
+3. В **Environment variables** задайте:
+   - `TELEGRAM_BOT_TOKEN` и `TELEGRAM_CHANNEL_ID`;
+   - `CF_TELEGRAM_AUTO_PUBLISH=true`. Облако не сохраняет файл с разрешением между сессиями, поэтому разрешение задаётся переменной. Ставьте её после того, как один раз проверили подключение командой `cf telegram check`.
+4. В **Network access** разрешите `api.telegram.org`, `speech.platform.bing.com` (озвучка), `opengraph.githubassets.com` и сайты, которые нужны для исследования. Либо выберите уровень доступа шире.
+   Подробнее: https://code.claude.com/docs/en/cloud-environments
+
+В облаке проекты лежат в `~/.ai-content-factory/projects`. В конце работы `/create-video` копирует видео и описания в `./video-output/` текущей рабочей папки (`cf export`) — оттуда их можно открыть в приложении.
 
 Необязательно:
 ```bash
@@ -86,7 +113,7 @@ sudo apt install espeak-ng                # резервный движок (bre
 ### 4. Подключение Telegram-канала
 1. В Telegram откройте **@BotFather**, отправьте `/newbot` и скопируйте токен.
 2. Добавьте бота в канал **администратором** с правом «Публикация сообщений».
-3. В `content-factory/.env`:
+3. В `~/.ai-content-factory/.env` (или в `content-factory/.env` при работе внутри репозитория):
    ```
    TELEGRAM_BOT_TOKEN=123456789:AA...
    TELEGRAM_CHANNEL_ID=@your_channel     # для приватного канала числовой id: -100xxxxxxxxxx
@@ -115,9 +142,9 @@ sudo apt install espeak-ng                # резервный движок (bre
 /create-video <тема>
 ```
 
-Вручную (CLI, из корня репозитория):
+Вручную (после глобальной установки команда `cf` доступна везде):
 ```bash
-CF="node content-factory/engine/bin/cf.mjs"
+CF=cf   # или: node ~/.ai-content-factory/engine/bin/cf.mjs
 $CF new "Shorts: 5 AI-инструментов"   # создать проект, вывести id
 # ... заполнить research.json, script.json, publication.json (см. templates/)
 $CF validate <id>                     # проверка схем и фактов
@@ -125,6 +152,7 @@ $CF links <id>                        # проверка ссылок
 $CF build <id>                        # собрать видео (--force: всё заново)
 $CF publish <id>                      # опубликовать (--force: повторно)
 $CF run <id>                          # build + publish
+$CF export <id> [папка]               # скопировать видео и описания (по умолчанию ./video-output)
 $CF list                              # все проекты
 $CF status <id>                       # этапы проекта
 $CF doctor                            # диагностика окружения
@@ -134,7 +162,9 @@ $CF doctor                            # диагностика окружени�
 ## Структура
 
 ```
-content-factory/
+~/.ai-content-factory/  (в репозитории — content-factory/)
+├── install.mjs                  установка/обновление, глобальная команда /create-video
+├── skill/SKILL.md               шаблон команды /create-video
 ├── config/factory.config.json   платформы, голоса, громкость, лимиты (переопределения: config/local.config.json)
 ├── templates/                   шаблоны research/script/publication
 ├── assets/music/                ваши треки (необязательно)

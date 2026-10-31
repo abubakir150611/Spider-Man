@@ -12,6 +12,7 @@ export const SHARED_ASSETS_DIR = resolve(FACTORY_ROOT, 'assets');
 export const PROJECTS_DIR = process.env.CF_PROJECTS_DIR
   ? resolve(process.env.CF_PROJECTS_DIR)
   : resolve(FACTORY_ROOT, 'projects');
+export const ENV_FILE = resolve(FACTORY_ROOT, '.env');
 export const MODELS_DIR = resolve(FACTORY_ROOT, '.models');
 export const REMOTION_ENTRY = resolve(ENGINE_DIR, 'remotion/index.ts');
 export const TTS_SCRIPT = resolve(ENGINE_DIR, 'tts/tts.py');

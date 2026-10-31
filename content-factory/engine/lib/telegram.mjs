@@ -1,8 +1,8 @@
 import { existsSync, openAsBlob, statSync } from 'node:fs';
 import { basename, join } from 'node:path';
-import { env } from './env.mjs';
+import { env, envBool } from './env.mjs';
 import { ffprobe } from './ffmpeg.mjs';
-import { CONFIG_DIR } from './paths.mjs';
+import { CONFIG_DIR, ENV_FILE } from './paths.mjs';
 import { readJson, writeJson } from './project.mjs';
 import { splitMessage } from './publication.mjs';
 import { sleep } from './retry.mjs';
@@ -18,12 +18,18 @@ export class TelegramError extends Error {
   }
 }
 
+/**
+ * Approval state. In ephemeral environments (cloud sessions) the state file does
+ * not survive, so CF_TELEGRAM_AUTO_PUBLISH=true acts as a standing approval.
+ */
 export function readState() {
-  return existsSync(STATE_FILE) ? readJson(STATE_FILE) : {};
+  const state = existsSync(STATE_FILE) ? readJson(STATE_FILE) : {};
+  if (!state.approved && envBool('CF_TELEGRAM_AUTO_PUBLISH')) return { ...state, approved: true, approvedBy: 'CF_TELEGRAM_AUTO_PUBLISH' };
+  return state;
 }
 
 export function writeState(patch) {
-  const state = { ...readState(), ...patch };
+  const state = { ...(existsSync(STATE_FILE) ? readJson(STATE_FILE) : {}), ...patch };
   writeJson(STATE_FILE, state);
   return state;
 }
@@ -128,7 +134,7 @@ export function messageLink(chat, messageId) {
 export async function publishToTelegram({ project, timeline, captionHtml, postHtml, logger, force = false, client: injected }) {
   const { files } = project;
   const settings = telegramSettings();
-  if (!settings.configured) return { status: 'not_configured', message: 'Заполните TELEGRAM_BOT_TOKEN и TELEGRAM_CHANNEL_ID в content-factory/.env' };
+  if (!settings.configured) return { status: 'not_configured', message: `Заполните TELEGRAM_BOT_TOKEN и TELEGRAM_CHANNEL_ID в ${ENV_FILE} (или задайте переменные окружения)` };
   const state = readState();
   if (!state.approved) return { status: 'awaiting_approval', message: 'Первая публикация требует подтверждения: проверьте подключение (`cf telegram check`) и выполните `cf telegram approve`.' };
   if (existsSync(files.telegramResult) && !force) {

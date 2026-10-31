@@ -1,21 +1,22 @@
 ---
+name: create-video
 description: AI Content Factory — исследование, сценарий, озвучка, монтаж, рендер и публикация видео по одной теме
 argument-hint: "[Shorts:|Reels:|TikTok:|YouTube long:] <тема> [--lang ru|en|ky] [--duration 45s|8m]"
-allowed-tools: Bash(node content-factory/engine/bin/cf.mjs:*), Bash(cd content-factory && pnpm install:*), WebSearch, WebFetch, Read, Write, Edit, Glob, Grep, AskUserQuestion
+allowed-tools: Bash({{CF}}:*), WebSearch, WebFetch, Read, Write, Edit, Glob, Grep, AskUserQuestion
 ---
 
 Ты работаешь как AI Content Factory. Пользователь выбрал только тему: **$ARGUMENTS**
 
-Всё остальное делаешь сам, без лишних вопросов. Все команды запускай из корня репозитория.
-CLI: `node content-factory/engine/bin/cf.mjs` (далее `cf`). Подробности — `content-factory/README.md`.
+Всё остальное делаешь сам, без лишних вопросов. Команда работает из любой папки и любого репозитория.
+CLI: `{{CF}}` (далее `cf`). Подробности — `{{CF_HOME}}/README.md`.
 
 ## 0. Проект
-1. Если нет `content-factory/node_modules` — выполни `cd content-factory && pnpm install`.
+1. Выполни `cf doctor`. Если есть строки с ✖ (нет ffmpeg, Node, зависимостей) — сообщи пользователю, как исправить (README → Установка), и остановись. ⚠ — не блокирует работу.
 2. `cf new "$ARGUMENTS" --json` → запомни `id`, `dir`, `brief` (платформа, язык, длительность, размер кадра).
    Параметры, которых нет в запросе, CLI выбирает сам (по умолчанию: Shorts 9:16, язык темы, 45 с; YouTube long — 8 мин).
 
 ## 1. Исследование → `<dir>/research/research.json`
-Формат: `content-factory/templates/research.example.json`.
+Формат: `{{CF_HOME}}/templates/research.example.json`.
 - Ищи через WebSearch / WebFetch. Приоритет: официальные сайты, официальная документация, официальные GitHub-репозитории; затем авторитетные издания. Проверяй, что информация актуальна (дата сегодня — смотри системный контекст).
 - Для каждого пункта: название, назначение, возможности, преимущества, сайт, GitHub, документация, команды установки, пример использования, лицензия/цена, источники.
 - **Ничего не выдумывай.** Команду установки записывай только если видел её дословно в официальном источнике, и укажи этот URL в `source`. Нет подтверждения — оставь `install: []`. Цифры (звёзды, количество) — только из источника, в `facts` с URL.
@@ -23,7 +24,7 @@ CLI: `node content-factory/engine/bin/cf.mjs` (далее `cf`). Подробн�
 - Выполни `cf links <id>`: недоступные ссылки замени или убери.
 
 ## 2. Сценарий → `<dir>/scripts/script.json`
-Формат и типы сцен: `content-factory/templates/script.example.json` (hook, title, item, code, stat, bullets, fact, outro). `language`, `platform`, `targetDurationSec` бери из brief.
+Формат и типы сцен: `{{CF_HOME}}/templates/script.example.json` (hook, title, item, code, stat, bullets, fact, outro). `language`, `platform`, `targetDurationSec` бери из brief.
 - **Shorts/Reels/TikTok (30–60 с):** hook ≤ 2 с (6–10 слов, интрига/боль/обещание) → быстрое представление → пункты (item/code) → неожиданный факт (stat/fact) → вывод → outro с призывом подписаться.
 - **YouTube long:** hook → title (о чём видео) → bullets (проблема) → подробные разделы с `chapter` у первой сцены каждого раздела → code-сцены с реальными командами → stat/fact → итоги (fact/bullets) → outro. Главы станут таймкодами YouTube.
 - Пиши как живой автор, а не как статья: короткие фразы, обращение на «ты»/«вы» по стилю, ритм, конкретика, без канцелярита и воды. Озвучка ≈ 2.4 слова/с (ru), 2.7 (en), 2.2 (ky) — подгони объём под длительность.
@@ -34,7 +35,7 @@ CLI: `node content-factory/engine/bin/cf.mjs` (далее `cf`). Подробн�
 - Язык озвучки и всего текста — язык из brief (ru / en / ky).
 
 ## 3. Публикация → `<dir>/publications/publication.json`
-Формат: `content-factory/templates/publication.example.json`. Название, краткое и подробное описание, основные тезисы, хештеги (с `#`, без пробелов), ключевые слова, призыв подписаться. **Обязательно** добавь в `links` каждый инструмент/библиотеку/репозиторий из видео с сайтом, GitHub, документацией и подтверждёнными командами установки. `sources` — все источники исследования.
+Формат: `{{CF_HOME}}/templates/publication.example.json`. Название, краткое и подробное описание, основные тезисы, хештеги (с `#`, без пробелов), ключевые слова, призыв подписаться. **Обязательно** добавь в `links` каждый инструмент/библиотеку/репозиторий из видео с сайтом, GitHub, документацией и подтверждёнными командами установки. `sources` — все источники исследования.
 
 ## 4. Проверка и сборка
 1. `cf validate <id>` — исправляй все ошибки; предупреждения (длительность, hook) тоже по возможности.
@@ -47,5 +48,8 @@ CLI: `node content-factory/engine/bin/cf.mjs` (далее `cf`). Подробн�
 - Если `approved: false`: выполни `cf telegram check`. При успехе спроси пользователя через AskUserQuestion: «Разрешить публикацию в канал «<название>» сейчас и автоматически в будущем?». Да → `cf telegram approve`, затем `cf publish <id>`. Нет → не публикуй.
 - Если `approved: true` — сразу `cf publish <id>` без вопросов.
 
-## 6. Отчёт пользователю (кратко)
+## 6. Файлы для пользователя
+Проекты хранятся в `{{CF_HOME}}/projects/` (или в `CF_PROJECTS_DIR`). Если пользователь работает в облачной сессии или в другом репозитории, ему нужны файлы в текущей рабочей папке: выполни `cf export <id> ./video-output` и, если доступен инструмент отправки файлов, отправь `final.mp4` и `publication.md`. Не коммить `video-output/`.
+
+## 7. Отчёт пользователю (кратко)
 Путь к видео, длительность/формат, голос (движок), что опубликовано (ссылка на пост) или почему нет, где лежат описание и хештеги (`publications/publication.md`), и замечания QA. Не выводи токены и содержимое .env.

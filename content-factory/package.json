@@ -12,7 +12,9 @@
     "doctor": "node engine/bin/cf.mjs doctor",
     "studio": "remotion studio engine/remotion/index.ts",
     "test": "node --test --experimental-test-coverage --test-coverage-include='engine/lib/**' 'engine/test/*.test.mjs'",
-    "typecheck": "tsc -p engine/remotion/tsconfig.json"
+    "typecheck": "tsc -p engine/remotion/tsconfig.json",
+    "sync-skill": "node engine/bin/sync-skill.mjs",
+    "install-global": "node install.mjs"
   },
   "engines": {
     "node": ">=20.12"
@@ -33,5 +35,10 @@
     "@types/node": "^22.20.5",
     "@types/react": "^19.3.0",
     "typescript": "~5.7.3"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
   }
 }

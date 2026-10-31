@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { findBrowser } from './browser.mjs';
 import { env } from './env.mjs';
 import { pythonBin, run, which } from './exec.mjs';
-import { FACTORY_ROOT, TTS_SCRIPT } from './paths.mjs';
+import { ENV_FILE, FACTORY_ROOT, TTS_SCRIPT } from './paths.mjs';
 import { readState, telegramSettings } from './telegram.mjs';
 
 async function reachable(url) {
@@ -24,7 +24,7 @@ export async function doctor() {
   add('Node.js ≥ 20.12', major > 20 || (major === 20 && minor >= 12), process.versions.node);
   add('ffmpeg', Boolean(which('ffmpeg')), which('ffmpeg') || 'не найден — https://ffmpeg.org/download.html');
   add('ffprobe', Boolean(which('ffprobe')), which('ffprobe') || 'не найден');
-  add('Зависимости npm', existsSync(join(FACTORY_ROOT, 'node_modules', 'remotion')), 'pnpm install в content-factory/');
+  add('Зависимости npm', existsSync(join(FACTORY_ROOT, 'node_modules', 'remotion')), `pnpm install в ${FACTORY_ROOT}`);
   const browser = findBrowser();
   add('Chromium для рендера', true, browser || 'будет скачан Remotion при первом рендере', browser ? 'ok' : 'warn');
 
@@ -44,8 +44,8 @@ export async function doctor() {
   if (!tts.edge && !tts.piper && !tts.mms && !tts.espeak) add('TTS', false, 'ни один движок озвучки не доступен');
 
   const tg = telegramSettings();
-  add('TELEGRAM_BOT_TOKEN', Boolean(tg.token), tg.token ? 'задан (скрыт)' : 'не задан в content-factory/.env', tg.token ? 'ok' : 'warn');
-  add('TELEGRAM_CHANNEL_ID', Boolean(tg.chatId), tg.chatId ? 'задан' : 'не задан в content-factory/.env', tg.chatId ? 'ok' : 'warn');
+  add('TELEGRAM_BOT_TOKEN', Boolean(tg.token), tg.token ? 'задан (скрыт)' : `не задан (${ENV_FILE} или переменная окружения)`, tg.token ? 'ok' : 'warn');
+  add('TELEGRAM_CHANNEL_ID', Boolean(tg.chatId), tg.chatId ? 'задан' : `не задан (${ENV_FILE} или переменная окружения)`, tg.chatId ? 'ok' : 'warn');
   const state = readState();
   add('Telegram: проверка и разрешение публикации', Boolean(state.approved), state.approved ? `разрешено ${state.approvedAt} (${state.verified?.chat?.title || ''})` : 'выполните cf telegram check → cf telegram approve', state.approved ? 'ok' : 'info');
 

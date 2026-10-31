@@ -10,14 +10,14 @@
  *   cf telegram check|approve|revoke|status
  *   cf list | cf status <id> | cf doctor
  */
-import { existsSync } from 'node:fs';
-import { relative } from 'node:path';
+import { copyFileSync, existsSync, mkdirSync } from 'node:fs';
+import { join, relative, resolve } from 'node:path';
 import { loadEnv } from '../lib/env.mjs';
 import { createLogger, redact } from '../lib/logger.mjs';
 import { doctor } from '../lib/doctor.mjs';
 import { loadInputs } from '../lib/inputs.mjs';
 import { checkLinks, collectUrls } from '../lib/links.mjs';
-import { FACTORY_ROOT, TEMPLATES_DIR } from '../lib/paths.mjs';
+import { ENV_FILE, PROJECTS_DIR, TEMPLATES_DIR } from '../lib/paths.mjs';
 import { buildProject, publishProject } from '../lib/pipeline.mjs';
 import { createProject, listProjects, loadProject, readJson, writeJson } from '../lib/project.mjs';
 import { parseRequest } from '../lib/request-parser.mjs';
@@ -31,7 +31,11 @@ const args = argv.filter((a) => !a.startsWith('--'));
 const json = flags.has('--json');
 const [command, ...rest] = args;
 
-const rel = (p) => relative(process.cwd(), p) || '.';
+const rel = (p) => {
+  const r = relative(process.cwd(), p);
+  return !r ? '.' : r.startsWith('..') ? p : r;
+};
+const CLI = `node ${rel(process.argv[1])}`;
 
 function out(data, text) {
   if (json) process.stdout.write(`${JSON.stringify(data, null, 2)}\n`);
@@ -55,11 +59,11 @@ const commands = {
         `  Платформа: ${brief.platformLabel} (${brief.width}×${brief.height}), язык: ${brief.language}, длительность: ~${brief.durationSec}с`,
         `  Тема: ${brief.topic}`,
         '',
-        'Дальше создайте файлы (шаблоны в content-factory/templates/):',
+        `Дальше создайте файлы (шаблоны в ${rel(TEMPLATES_DIR)}):`,
         `  ${rel(project.files.research)}`,
         `  ${rel(project.files.script)}`,
         `  ${rel(project.files.publication)}`,
-        `и запустите: node content-factory/engine/bin/cf.mjs run ${project.id}`,
+        `и запустите: ${CLI} run ${project.id}`,
       ].join('\n'),
     );
   },
@@ -119,13 +123,13 @@ const commands = {
   async telegram() {
     const sub = rest[0] || 'status';
     const settings = telegramSettings();
-    const logger = createLogger({ file: `${FACTORY_ROOT}/projects/telegram.log` });
+    const logger = createLogger({ file: join(PROJECTS_DIR, 'telegram.log') });
     if (sub === 'status') {
       const state = readState();
       out({ configured: settings.configured, ...state }, [
         `Настроен: ${settings.configured ? 'да' : 'нет'}`,
         `Проверено: ${state.verified ? `${state.verified.at} — ${state.verified.bot} → «${state.verified.chat?.title}»` : 'нет'}`,
-        `Автопубликация разрешена: ${state.approved ? `да (${state.approvedAt})` : 'нет'}`,
+        `Автопубликация разрешена: ${state.approved ? `да (${state.approvedAt || 'CF_TELEGRAM_AUTO_PUBLISH'})` : 'нет'}`,
       ].join('\n'));
       return;
     }
@@ -134,7 +138,7 @@ const commands = {
       out({ approved: false }, '✔ Автопубликация отключена');
       return;
     }
-    if (!settings.configured) throw new Error('Заполните TELEGRAM_BOT_TOKEN и TELEGRAM_CHANNEL_ID в content-factory/.env');
+    if (!settings.configured) throw new Error(`Заполните TELEGRAM_BOT_TOKEN и TELEGRAM_CHANNEL_ID в ${ENV_FILE} (или задайте переменные окружения)`);
     const client = new TelegramClient({ token: settings.token, apiBase: settings.apiBase, logger });
     if (sub === 'check') {
       const result = await checkConnection({ client, chatId: settings.chatId, logger });
@@ -155,6 +159,20 @@ const commands = {
       return;
     }
     throw new Error(`Неизвестная подкоманда telegram ${sub}`);
+  },
+
+  async export() {
+    const project = loadProject(rest[0]);
+    const target = resolve(rest[1] || 'video-output', project.id);
+    mkdirSync(target, { recursive: true });
+    const pubDir = join(project.dir, 'publications');
+    const items = [
+      project.files.finalVideo, project.files.cover, project.files.srt, project.files.vtt,
+      join(pubDir, 'publication.md'), join(pubDir, 'telegram-post.html'), join(pubDir, 'youtube-description.txt'), join(pubDir, 'social-caption.txt'),
+    ].filter(existsSync);
+    if (!existsSync(project.files.finalVideo)) throw new Error('Видео ещё не собрано: cf build <id>');
+    for (const f of items) copyFileSync(f, join(target, f.split(/[\\/]/).pop()));
+    out({ dir: target, files: items.map((f) => join(target, f.split(/[\\/]/).pop())) }, `✔ Скопировано ${items.length} файлов в ${rel(target)}`);
   },
 
   async list() {
@@ -210,6 +228,7 @@ async function main() {
         '  cf publish <id> [--force]      опубликовать в Telegram\n' +
         '  cf run <id>                    build + publish\n' +
         '  cf telegram check|approve|revoke|status|test\n' +
+        '  cf export <id> [папка]         скопировать видео и описания в папку (по умолчанию ./video-output)\n' +
         '  cf list | cf status [id] | cf doctor\n' +
         '\n  id: полный id, его часть или "latest". Флаги: --json --verbose\n',
     );
