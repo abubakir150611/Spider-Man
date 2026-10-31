@@ -53,9 +53,12 @@
 
 ### 2. Установка — один раз, работает во всех проектах и сессиях
 ```bash
-git clone https://github.com/abubakir150611/Spider-Man.git
+git clone --branch ccr-fdcc5adb-dun2m5 https://github.com/abubakir150611/Spider-Man.git
 node Spider-Man/content-factory/install.mjs
 ```
+(Когда ветка будет влита в `main`, флаг `--branch …` можно не указывать.)
+
+Windows (PowerShell): сначала `winget install OpenJS.NodeJS.LTS Gyan.FFmpeg Python.Python.3.12`, откройте новый терминал, затем те же две команды.
 Установщик:
 - копирует фабрику в `~/.ai-content-factory` (другое место задаётся через `CF_HOME`);
 - ставит npm-зависимости и `edge-tts`;
@@ -77,7 +80,7 @@ node Spider-Man/content-factory/install.mjs
 1. Откройте меню окружения в заголовке сессии → **Edit**.
 2. В **Setup script** добавьте:
    ```bash
-   git clone --depth 1 https://github.com/abubakir150611/Spider-Man.git /tmp/acf && node /tmp/acf/content-factory/install.mjs
+   git clone --depth 1 --branch ccr-fdcc5adb-dun2m5 https://github.com/abubakir150611/Spider-Man.git /tmp/acf && node /tmp/acf/content-factory/install.mjs
    apt-get install -y espeak-ng >/dev/null 2>&1 || true   # необязательно: резервный голос
    ```
 3. В **Environment variables** задайте:

@@ -5,7 +5,7 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'no
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { FACTORY_ROOT } from '../lib/paths.mjs';
-import { REPO_SKILL, cliCommandFor, renderSkill } from '../lib/skill.mjs';
+import { REPO_SKILL, cliCommandFor, renderSkill, toPortable } from '../lib/skill.mjs';
 
 test('skill template renders concrete CLI paths and no placeholders remain', () => {
   const md = renderSkill({ cliCommand: cliCommandFor('/home/me/.ai-content-factory'), factoryHome: '/home/me/.ai-content-factory' });
@@ -13,6 +13,10 @@ test('skill template renders concrete CLI paths and no placeholders remain', () 
   assert.match(md, /allowed-tools: Bash\(node \/home\/me\/\.ai-content-factory\/engine\/bin\/cf\.mjs:\*\)/);
   assert.ok(!md.includes('{{'));
   assert.equal(cliCommandFor('/My Home/cf'), 'node "/My Home/cf/engine/bin/cf.mjs"');
+  // Windows paths become forward-slash paths that work in Git Bash, cmd and PowerShell.
+  assert.equal(toPortable('C:\\Users\\abuba\\.ai-content-factory\\engine\\bin\\cf.mjs'), 'C:/Users/abuba/.ai-content-factory/engine/bin/cf.mjs');
+  const win = renderSkill({ cliCommand: 'node C:/Users/abuba/.ai-content-factory/engine/bin/cf.mjs', factoryHome: 'C:\\Users\\abuba\\.ai-content-factory' });
+  assert.ok(!win.includes('\\'));
 });
 
 test('repository copy of the skill is in sync with the template (run pnpm sync-skill)', () => {

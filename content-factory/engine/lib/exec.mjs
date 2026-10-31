@@ -46,5 +46,12 @@ export function which(cmd) {
 }
 
 export function pythonBin() {
-  return process.env.CF_PYTHON || which('python3') || which('python') || 'python3';
+  if (process.env.CF_PYTHON) return process.env.CF_PYTHON;
+  // On Windows `python3` is often the Microsoft Store stub, so prefer `python` / `py`.
+  const order = process.platform === 'win32' ? ['python', 'py', 'python3'] : ['python3', 'python'];
+  for (const name of order) {
+    const found = which(name);
+    if (found && !/WindowsApps/i.test(found)) return found;
+  }
+  return order[0];
 }
