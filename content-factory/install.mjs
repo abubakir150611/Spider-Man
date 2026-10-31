@@ -37,7 +37,10 @@ if (process.allowedNodeEnvironmentFlags.has('--use-system-ca') && !(childEnv.NOD
 }
 function sh(cmd, args, opts = {}) {
   const shell = isWin && /^(pnpm|npm)(\.cmd)?$/.test(cmd);
-  const r = spawnSync(cmd, args, { stdio: 'inherit', shell, env: childEnv, ...opts });
+  // With a shell, pass one command string (args here are plain flags) to avoid Node's DEP0190 warning.
+  const r = shell
+    ? spawnSync([cmd, ...args].join(' '), { stdio: 'inherit', shell: true, env: childEnv, ...opts })
+    : spawnSync(cmd, args, { stdio: 'inherit', env: childEnv, ...opts });
   return r.status === 0;
 }
 const has = (cmd) => spawnSync(isWin ? 'where' : 'which', [cmd], { stdio: 'ignore' }).status === 0;
@@ -80,6 +83,9 @@ if (!SKIP_DEPS) {
     process.exit(1);
   }
   log('npm-зависимости установлены.');
+  if (!sh('node', [join(CF_HOME, 'engine', 'bin', 'ensure-browser.mjs')], { cwd: CF_HOME })) {
+    warn('Не удалось скачать Chrome Headless Shell — он скачается при первом рендере.');
+  }
   const py = (isWin ? ['python', 'py', 'python3'] : ['python3', 'python']).find(has);
   if (py) {
     log('Устанавливаю edge-tts (озвучка, ~1 МБ).');

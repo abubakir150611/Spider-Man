@@ -8,7 +8,7 @@ export async function renderVideo({ timeline, publicDir, outFile, logger, concur
   const { bundle } = await import('@remotion/bundler');
   const { renderMedia, selectComposition } = await import('@remotion/renderer');
   const config = getConfig();
-  const browserExecutable = findBrowser();
+  const browserExecutable = findBrowser({ purpose: 'render' });
   logger?.info(`Remotion: сборка композиции${browserExecutable ? ` (браузер: ${browserExecutable})` : ' (браузер будет загружен Remotion)'}`);
   const serveUrl = await bundle({ entryPoint: REMOTION_ENTRY, publicDir, onProgress: () => {} });
   const inputProps = { timeline };

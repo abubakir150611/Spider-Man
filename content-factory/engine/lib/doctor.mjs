@@ -25,8 +25,10 @@ export async function doctor() {
   add('ffmpeg', Boolean(which('ffmpeg')), which('ffmpeg') || 'не найден — https://ffmpeg.org/download.html');
   add('ffprobe', Boolean(which('ffprobe')), which('ffprobe') || 'не найден');
   add('Зависимости npm', existsSync(join(FACTORY_ROOT, 'node_modules', 'remotion')), `pnpm install в ${FACTORY_ROOT}`);
-  const browser = findBrowser();
-  add('Chromium для рендера', true, browser || 'будет скачан Remotion при первом рендере', browser ? 'ok' : 'warn');
+  const browser = findBrowser({ purpose: 'render' });
+  add('Chrome Headless Shell (рендер)', true, browser || 'ещё не скачан — запустите установщик повторно или он скачается при первом рендере (~100 МБ)', browser ? 'ok' : 'warn');
+  const shotBrowser = findBrowser({ purpose: 'screenshot' });
+  add('Браузер для скриншотов сайтов', true, shotBrowser || 'не найден — скриншоты будут пропущены', shotBrowser ? 'ok' : 'warn');
 
   const py = pythonBin();
   let tts = {};

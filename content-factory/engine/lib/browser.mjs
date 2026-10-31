@@ -12,11 +12,13 @@ function globHeadless(root, pattern) {
 }
 
 /**
- * Finds a Chromium binary for rendering/screenshots. Order:
- * CF_BROWSER → Remotion's downloaded headless shell → Playwright browsers → system Chrome.
- * Returns null to let Remotion download its own Chrome Headless Shell.
+ * Finds a Chromium binary.
+ * - purpose 'render': only Chrome Headless Shell builds (CF_BROWSER, Remotion's download, Playwright's
+ *   headless shell). Regular Chrome ≥132 no longer supports the old headless mode Remotion needs, so
+ *   null is returned instead and Remotion downloads its own headless shell.
+ * - purpose 'screenshot': any Chromium, including the system Chrome (used by Playwright).
  */
-export function findBrowser() {
+export function findBrowser({ purpose = 'screenshot' } = {}) {
   if (process.env.CF_BROWSER && existsSync(process.env.CF_BROWSER)) return process.env.CF_BROWSER;
   const candidates = [];
   const remotionDir = join(FACTORY_ROOT, 'node_modules', '.remotion', 'chrome-headless-shell');
@@ -33,8 +35,11 @@ export function findBrowser() {
     for (const dir of globHeadless(root, /^chromium_headless_shell-\d+/)) {
       candidates.push(join(dir, 'chrome-linux', 'headless_shell'), join(dir, 'chrome-headless-shell-linux64', 'chrome-headless-shell'));
     }
-    for (const dir of globHeadless(root, /^chromium-\d+/)) candidates.push(join(dir, 'chrome-linux', 'chrome'), join(dir, 'chrome-linux64', 'chrome'));
+    if (purpose !== 'render') {
+      for (const dir of globHeadless(root, /^chromium-\d+/)) candidates.push(join(dir, 'chrome-linux', 'chrome'), join(dir, 'chrome-linux64', 'chrome'));
+    }
   }
+  if (purpose === 'render') return firstExisting(candidates);
   candidates.push(
     '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
     '/usr/bin/google-chrome',
