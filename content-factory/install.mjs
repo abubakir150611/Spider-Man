@@ -29,9 +29,15 @@ const warn = (m) => process.stdout.write(`⚠ ${m}\n`);
 
 // On Windows only npm/pnpm are .cmd shims that need a shell; everything else runs directly
 // (so paths with spaces stay intact).
+// NODE_USE_SYSTEM_CA makes npm/pnpm/Node trust the OS certificate store (antivirus or corporate
+// HTTPS inspection otherwise fails with UNABLE_TO_VERIFY_LEAF_SIGNATURE). Ignored by old Node versions.
+const childEnv = { ...process.env, NODE_USE_SYSTEM_CA: '1' };
+if (process.allowedNodeEnvironmentFlags.has('--use-system-ca') && !(childEnv.NODE_OPTIONS || '').includes('--use-system-ca')) {
+  childEnv.NODE_OPTIONS = `${childEnv.NODE_OPTIONS || ''} --use-system-ca`.trim();
+}
 function sh(cmd, args, opts = {}) {
   const shell = isWin && /^(pnpm|npm)(\.cmd)?$/.test(cmd);
-  const r = spawnSync(cmd, args, { stdio: 'inherit', shell, ...opts });
+  const r = spawnSync(cmd, args, { stdio: 'inherit', shell, env: childEnv, ...opts });
   return r.status === 0;
 }
 const has = (cmd) => spawnSync(isWin ? 'where' : 'which', [cmd], { stdio: 'ignore' }).status === 0;
@@ -57,17 +63,26 @@ mkdirSync(join(CF_HOME, 'projects'), { recursive: true });
 if (!existsSync(join(CF_HOME, '.env'))) cpSync(join(SRC, '.env.example'), join(CF_HOME, '.env'));
 log(`Фабрика: ${CF_HOME}`);
 
-// 2. Dependencies.
+// 2. Dependencies (production only: Remotion Studio, TypeScript and test tooling are not needed to render).
 if (!SKIP_DEPS) {
+  log('Устанавливаю npm-зависимости (Remotion, React и др., ~70–90 МБ загрузки).');
+  log('При медленном интернете это может занять 10–40 минут — ниже виден прогресс загрузки.');
   const npmOk = has('pnpm')
-    ? sh('pnpm', ['install', '--prod=false'], { cwd: CF_HOME })
-    : sh('npm', ['install', '--no-audit', '--no-fund'], { cwd: CF_HOME });
+    ? sh('pnpm', ['install', '--prod', '--reporter=default'], { cwd: CF_HOME })
+    : sh('npm', ['install', '--omit=dev', '--no-audit', '--no-fund', '--loglevel=http'], { cwd: CF_HOME });
   if (!npmOk) {
-    console.error('✖ Не удалось установить npm-зависимости. Проверьте Node.js ≥ 20.12 и интернет.');
+    console.error(
+      '✖ Не удалось установить npm-зависимости.\n' +
+        '  • Ошибка сертификата (UNABLE_TO_VERIFY_LEAF_SIGNATURE / SELF_SIGNED_CERT): обновите Node.js до 22.15+ или 24 LTS —\n' +
+        '    установщик уже включает системные сертификаты; либо отключите в антивирусе «проверку защищённых соединений».\n' +
+        '  • Иначе проверьте интернет и запустите установщик снова — уже скачанное не загружается повторно.',
+    );
     process.exit(1);
   }
+  log('npm-зависимости установлены.');
   const py = (isWin ? ['python', 'py', 'python3'] : ['python3', 'python']).find(has);
   if (py) {
+    log('Устанавливаю edge-tts (озвучка, ~1 МБ).');
     const req = join(CF_HOME, 'requirements.txt');
     const ok =
       sh(py, ['-m', 'pip', 'install', '--quiet', '-r', req]) ||

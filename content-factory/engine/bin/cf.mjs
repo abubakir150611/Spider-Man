@@ -13,6 +13,7 @@
 import { copyFileSync, existsSync, mkdirSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { loadEnv } from '../lib/env.mjs';
+import { enableSystemCA } from '../lib/system-ca.mjs';
 import { createLogger, redact } from '../lib/logger.mjs';
 import { doctor } from '../lib/doctor.mjs';
 import { loadInputs } from '../lib/inputs.mjs';
@@ -23,6 +24,7 @@ import { createProject, listProjects, loadProject, readJson, writeJson } from '.
 import { parseRequest } from '../lib/request-parser.mjs';
 import { TelegramClient, checkConnection, readState, telegramSettings, writeState } from '../lib/telegram.mjs';
 
+enableSystemCA();
 loadEnv();
 
 const argv = process.argv.slice(2);

@@ -23,6 +23,15 @@ import traceback
 from pathlib import Path
 
 
+# Use the OS certificate store (antivirus / corporate HTTPS inspection), if truststore is installed.
+try:
+    import truststore
+
+    truststore.inject_into_ssl()
+except Exception:  # optional dependency
+    pass
+
+
 def log(msg):
     print(msg, file=sys.stderr, flush=True)
 
